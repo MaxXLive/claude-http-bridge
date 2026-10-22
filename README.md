@@ -215,3 +215,7 @@ Sie erzeugt und speichert das Schlüsselpaar und signiert `HttpRequest`s. Ein An
 [`BridgeBackend.java`](https://github.com/MaxXLive/claude-chat-plugin/blob/main/src/main/java/com/maxxlive/claudechat/backend/BridgeBackend.java).
 Für `/v1/run`: Antwort als Stream lesen (`BodyHandlers.ofInputStream()`), Zeile für Zeile parsen und zum
 Abbrechen den Stream schließen.
+
+## Lizenz
+
+[MIT](LICENSE)
