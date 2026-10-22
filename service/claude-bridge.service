@@ -1,0 +1,16 @@
+# systemd user service for Claude Bridge (Linux).
+# Install: see README.md -> Linux. Paths assume the repo lives in ~/ClaudeBridge with a .venv inside.
+[Unit]
+Description=Claude Bridge
+After=network-online.target
+
+[Service]
+WorkingDirectory=%h/ClaudeBridge
+ExecStart=%h/ClaudeBridge/.venv/bin/python claude_bridge.py
+# claude is usually installed to ~/.local/bin, which systemd doesn't put on PATH
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

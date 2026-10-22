@@ -1,0 +1,7 @@
+__pycache__/
+.venv/
+
+# Never commit keys
+authorized_keys
+bridge_key
+.env
