@@ -1,5 +1,5 @@
 name: Claude Bridge
-version: "2.1.1"
+version: "2.1.2"
 slug: claude_bridge
 description: Die Claude Code CLI per HTTP, für Plugins auf Servern, die sie selbst nicht ausführen können
 url: https://github.com/MaxXLive/claude-http-bridge

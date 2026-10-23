@@ -3,7 +3,7 @@ FROM ${BUILD_FROM}
 
 ARG BUILD_ARCH
 # Bridge release the add-on runs. The add-on has its own version, so it can change without a bridge release.
-ARG BRIDGE_VERSION=2.0.1
+ARG BRIDGE_VERSION=2.0.2
 # Claude Code release channel or exact version, updated by rebuilding the add-on.
 ARG CLAUDE_VERSION=stable
 
