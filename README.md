@@ -227,7 +227,7 @@ deshalb ihren Parser behalten.
 
 ### `GET /health`
 
-`{"ok": true, "version": "1.2.0"}`, ohne Anmeldung.
+`{"ok": true, "version": "1.2.1"}`, ohne Anmeldung.
 
 ### Anmeldung für eigene Clients
 

@@ -29,7 +29,7 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from cryptography.hazmat.primitives.serialization import load_der_public_key
 
-__version__ = "1.2.0"
+__version__ = "1.2.1"
 
 MAX_BODY = 1_000_000
 MODEL = re.compile(r"^(sonnet|opus|haiku|claude-[a-z0-9-]+)$")
@@ -298,6 +298,11 @@ def make_handler(bridge, authorized_keys):
             self.send_response(status)
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(body)))
+            if status >= 400:
+                # The request body may not have been read; on a kept-alive connection it would
+                # otherwise be parsed as the next request
+                self.send_header("Connection", "close")
+                self.close_connection = True
             self.end_headers()
             self.wfile.write(body)
 
