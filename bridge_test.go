@@ -282,3 +282,27 @@ func TestAddKey(t *testing.T) {
 		t.Error("accepted a non-ed25519 line")
 	}
 }
+
+func TestClientAddress(t *testing.T) {
+	cases := []struct {
+		remote, forwarded, want string
+	}{
+		{"203.0.113.5:4000", "", "203.0.113.5:4000"},
+		{"127.0.0.1:4000", "", "127.0.0.1:4000"},
+		{"127.0.0.1:4000", "203.0.113.5", "203.0.113.5"},
+		{"[::1]:4000", "2001:db8::1", "2001:db8::1"},
+		{"127.0.0.1:4000", "198.51.100.1, 203.0.113.5", "203.0.113.5"},
+		{"192.168.1.20:4000", "203.0.113.5", "192.168.1.20:4000"},
+		{"127.0.0.1:4000", "not an address", "127.0.0.1:4000"},
+	}
+	for _, c := range cases {
+		request := httptest.NewRequest("GET", "/health", nil)
+		request.RemoteAddr = c.remote
+		if c.forwarded != "" {
+			request.Header.Set("X-Forwarded-For", c.forwarded)
+		}
+		if got := clientAddress(request); got != c.want {
+			t.Errorf("clientAddress(%s, %q) = %s, want %s", c.remote, c.forwarded, got, c.want)
+		}
+	}
+}

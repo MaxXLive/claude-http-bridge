@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os/exec"
 	"strconv"
@@ -66,8 +67,30 @@ func logged(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		recorder := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
 		next.ServeHTTP(recorder, r)
-		log.Printf("%s %q %d", r.RemoteAddr, r.Method+" "+r.URL.RequestURI(), recorder.status)
+		log.Printf("%s %q %d", clientAddress(r), r.Method+" "+r.URL.RequestURI(), recorder.status)
 	})
+}
+
+// clientAddress is the address to log for a request. Behind a tunnel on this computer (Tailscale Funnel, cloudflared)
+// every request comes from loopback, so it is the client address the tunnel added to X-Forwarded-For. Only the last
+// entry is the tunnel's own, earlier ones come from the client. Direct requests can't set it, they could fake it.
+func clientAddress(r *http.Request) string {
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
+	}
+	if ip := net.ParseIP(host); ip == nil || !ip.IsLoopback() {
+		return r.RemoteAddr
+	}
+	forwarded := r.Header.Values("X-Forwarded-For")
+	if len(forwarded) == 0 {
+		return r.RemoteAddr
+	}
+	entries := strings.Split(forwarded[len(forwarded)-1], ",")
+	if client := strings.TrimSpace(entries[len(entries)-1]); net.ParseIP(client) != nil {
+		return client
+	}
+	return r.RemoteAddr
 }
 
 func writeJSON(w http.ResponseWriter, status int, payload any) {
