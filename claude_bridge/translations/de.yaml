@@ -1,0 +1,27 @@
+configuration:
+  oauth_token:
+    name: OAuth-Token
+    description: Langlebiges Token aus "claude setup-token", meldet die CLI mit deinem Claude-Abo an.
+  authorized_keys:
+    name: Zugelassene Schlüssel
+    description: Eine Zeile pro Plugin, so wie sie im Server-Log steht, z.B. "ed25519 MCowBQYDK2VwAyEA... claudechat@server".
+  model:
+    name: Modell
+    description: Wenn eine Anfrage keins nennt (sonnet, opus, haiku oder eine volle ID).
+  web:
+    name: Web-Recherche
+    description: Erlaubt Recherche, wenn ein Client sie anfragt.
+  web_domains:
+    name: Web-Domains
+    description: Kommagetrennt, von diesen Seiten darf Claude lesen. Leer = Minecraft-Seiten, * = alle.
+  parallel:
+    name: Parallele Aufrufe
+    description: Höchstens so viele CLI-Prozesse gleichzeitig.
+  queue_timeout:
+    name: Warteschlange (Sekunden)
+    description: So lange wartet eine Anfrage auf einen freien Platz, danach 503.
+  timeout:
+    name: Timeout (Sekunden)
+    description: So lange darf ein einzelner CLI-Aufruf dauern.
+network:
+  8787/tcp: Bridge-API (nur signierte Anfragen)

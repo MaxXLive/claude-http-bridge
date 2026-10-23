@@ -1,0 +1,32 @@
+name: Claude Bridge
+version: "2.0.0"
+slug: claude_bridge
+description: Die Claude Code CLI per HTTP, für Plugins auf Servern, die sie selbst nicht ausführen können
+url: https://github.com/MaxXLive/claude-http-bridge
+arch:
+  - aarch64
+  - amd64
+init: false
+startup: application
+boot: auto
+ports:
+  8787/tcp: 8787
+ports_description:
+  8787/tcp: Bridge-API (nur signierte Anfragen)
+options:
+  authorized_keys: []
+  model: sonnet
+  web: true
+  parallel: 3
+  queue_timeout: 60
+  timeout: 180
+schema:
+  oauth_token: password?
+  authorized_keys:
+    - str
+  model: str
+  web: bool
+  web_domains: str?
+  parallel: int(1,20)
+  queue_timeout: int(1,600)
+  timeout: int(10,3600)

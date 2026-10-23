@@ -45,6 +45,24 @@ Nur ausprobieren, ohne Autostart: `claude-bridge` startet sie im Terminal, `Strg
   `chmod +x claude-bridge && xattr -d com.apple.quarantine claude-bridge`
 - **Linux:** `chmod +x claude-bridge`
 
+## Home Assistant
+
+Die Bridge gibt es auch als Home-Assistant-Add-on (amd64 und aarch64, z.B. Home Assistant Green/Yellow oder
+Raspberry Pi 4/5). Dann läuft sie rund um die Uhr, ohne dass ein PC an sein muss.
+
+1. **Einstellungen → Add-ons → Add-on Store → ⋮ → Repositories** und
+   `https://github.com/MaxXLive/claude-http-bridge` hinzufügen.
+2. **Claude Bridge** installieren. Das Bauen dauert beim ersten Mal ein paar Minuten.
+3. Auf einem Rechner mit Claude CLI `claude setup-token` ausführen und das Token in der Konfiguration unter
+   **OAuth-Token** eintragen. Die Schlüssel der Plugins kommen unter **Zugelassene Schlüssel** in die Liste
+   (statt `add-key`).
+4. Starten. Die Bridge lauscht auf Port 8787 des Home-Assistant-Rechners. Für Server im Internet braucht es
+   wie oben eine feste Adresse, z.B. über das Cloudflared-Add-on.
+
+Alles Weitere steht in der [Add-on-Doku](claude_bridge/DOCS.md). Die Add-on-Version ist die Bridge-Version
+(`version` in [`claude_bridge/config.yaml`](claude_bridge/config.yaml)), das Add-on lädt beim Bauen das passende
+Release.
+
 ## Befehle
 
 | Befehl | |
