@@ -204,7 +204,8 @@ Es bleibt keine Session zurück.
   {"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}, {"role": "user", "content": "..."}
 ]}
 ```
-→ `200 {"text": "..."}`, sonst `4xx/5xx {"error": "..."}`. Die letzte Nachricht muss vom `user` sein.
+→ `200 {"text": "...", "usage": {"input_tokens": 0, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0, "output_tokens": 0}}`
+(Token-Verbrauch laut CLI, über alle Recherche-Schritte), sonst `4xx/5xx {"error": "..."}`. Die letzte Nachricht muss vom `user` sein.
 `web` ist optional (siehe Sicherheit). Mit Recherche dauert eine Antwort meist 10–30 s.
 
 ### `POST /v1/run`: CLI mit Streaming und Sessions
@@ -227,7 +228,7 @@ deshalb ihren Parser behalten.
 
 ### `GET /health`
 
-`{"ok": true, "version": "1.2.1"}`, ohne Anmeldung.
+`{"ok": true, "version": "1.3.0"}`, ohne Anmeldung.
 
 ### Anmeldung für eigene Clients
 

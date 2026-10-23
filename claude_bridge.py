@@ -29,7 +29,7 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from cryptography.hazmat.primitives.serialization import load_der_public_key
 
-__version__ = "1.2.1"
+__version__ = "1.3.0"
 
 MAX_BODY = 1_000_000
 MODEL = re.compile(r"^(sonnet|opus|haiku|claude-[a-z0-9-]+)$")
@@ -61,6 +61,8 @@ WEB_DOMAINS = (
     "docs.fabricmc.net", "neoforged.net", "docs.neoforged.net", "github.com", "spigotmc.org", "www.spigotmc.org",
 )
 # Inherited from a parent Claude Code session, they would change how the child CLI behaves
+# Token counts of a /v1/chat reply, as reported by the CLI
+USAGE_KEYS = ("input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens", "output_tokens")
 CLEARED_ENV = ("CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT")
 
 
@@ -236,7 +238,7 @@ class Bridge:
         return path
 
     def chat(self, request):
-        """Stateless chat: full conversation in, reply text out."""
+        """Stateless chat: full conversation in, reply text and token usage out."""
         messages = request.get("messages")
         if not isinstance(messages, list) or not messages or messages[-1].get("role") != "user":
             raise BadRequest("messages must be a non-empty list ending with a user message")
@@ -258,7 +260,8 @@ class Bridge:
             raise RuntimeError(f"claude exited with {result.returncode}: {(result.stderr or result.stdout).strip()}")
         if output.get("is_error"):
             raise RuntimeError(output.get("result") or "claude reported an error")
-        return output.get("result", "")
+        usage = output.get("usage") or {}
+        return {"text": output.get("result", ""), "usage": {key: usage.get(key, 0) for key in USAGE_KEYS}}
 
     def run_command(self, request):
         """The CLI call for /v1/run: stream-json output, optionally resuming a session."""
@@ -357,7 +360,7 @@ def make_handler(bridge, authorized_keys):
 
         def handle_chat(self, request):
             try:
-                self.send_json(200, {"text": bridge.chat(request)})
+                self.send_json(200, bridge.chat(request))
             except subprocess.TimeoutExpired:
                 self.send_json(504, {"error": "claude timed out"})
             except RuntimeError as error:
