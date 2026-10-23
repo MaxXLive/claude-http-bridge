@@ -1,7 +1,8 @@
-__pycache__/
 .venv/
-
-# Never commit keys
+__pycache__/
+dist/
+claude-bridge
+claude-bridge.exe
 authorized_keys
 bridge_key
 .env

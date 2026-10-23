@@ -1,0 +1,82 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "LICENSE"
+      - ".gitignore"
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# never run two releases at the same time, they would pick the same patch number
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'push' && 'release' || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # tags and history for version + changelog
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Determine version
+        id: info
+        run: bash .github/scripts/release-info.sh "$RUNNER_TEMP/CHANGELOG.md"
+
+      - name: Test
+        run: |
+          test -z "$(gofmt -l .)" || { gofmt -l .; echo "::error::run gofmt -w ."; exit 1; }
+          go vet ./...
+          go test ./...
+
+      - name: Build
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            version="${{ steps.info.outputs.version }}-pr.${{ github.event.number }}"
+          else
+            version="${{ steps.info.outputs.version }}"
+          fi
+          echo "Building $version"
+          mkdir dist
+          for target in windows/amd64 windows/arm64 darwin/amd64 darwin/arm64 linux/amd64 linux/arm64; do
+            os="${target%/*}"
+            arch="${target#*/}"
+            name="claude-bridge-$os-$arch"
+            [[ "$os" == "windows" ]] && name="$name.exe"
+            CGO_ENABLED=0 GOOS="$os" GOARCH="$arch" \
+              go build -trimpath -ldflags "-s -w -X main.version=$version" -o "dist/$name" .
+          done
+          (cd dist && sha256sum * > SHA256SUMS.txt)
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: claude-bridge
+          path: dist/*
+          if-no-files-found: error
+
+      - name: Create release
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.info.outputs.released != 'true' && steps.info.outputs.relevant == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.info.outputs.tag }}
+          VERSION: ${{ steps.info.outputs.version }}
+        run: |
+          cat "$RUNNER_TEMP/CHANGELOG.md"
+          gh release create "$TAG" dist/* \
+            --target "$GITHUB_SHA" \
+            --title "Claude Bridge $VERSION" \
+            --notes-file "$RUNNER_TEMP/CHANGELOG.md"
