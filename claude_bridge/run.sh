@@ -69,15 +69,20 @@ start_tailscale() {
         bashio::log.error "Tailscale login failed"
         return
     fi
-    local url="https://$(tailscale status --json | jq -r '.Self.DNSName | rtrimstr(".")')"
+    # In userspace mode the tailnet only reaches the bridge through serve (tailnet) or funnel (internet).
+    tailscale serve reset
+    local reach
     if [[ "$(option tailscale_funnel)" == "true" ]]; then
         # The first time this prints a link to enable Funnel for the tailnet and waits for it.
         tailscale funnel --bg 8787
-        bashio::log.info "Tailscale Funnel: ${url} (bridge.url for the plugins)"
+        reach="from the internet"
     else
-        tailscale serve reset
-        bashio::log.info "Tailscale: ${url}:8787 (only inside the tailnet)"
+        tailscale serve --bg 8787
+        reach="only inside the tailnet"
     fi
+    # Right after a rename the status still has the old name, the serve config already the new one.
+    local host="$(tailscale serve status --json | jq -r '.Web // {} | keys[0] // empty')"
+    bashio::log.info "Tailscale: https://${host%:443} (${reach}, bridge.url for the plugins)"
 }
 
 if [[ "$(option tailscale)" == "true" ]]; then
