@@ -119,20 +119,58 @@ Wird ein Server neu aufgesetzt, entsteht ein neuer Schlüssel. Dann die alte Zei
 
 ## Tunnel
 
-Die Bridge selbst lauscht nur lokal. Erreichbar wird sie über einen dieser Tunnel:
+Die Bridge selbst lauscht nur lokal. Erreichbar wird sie über einen Tunnel. Für den Dauerbetrieb
+brauchst du eine **feste Adresse**: Sonst zeigt die Plugin-Config nach jedem Neustart ins Leere.
 
-| | Windows | macOS | Linux |
-|---|---|---|---|
-| **Cloudflare Quick Tunnel**: zum Ausprobieren, neue URL bei jedem Start | `winget install Cloudflare.cloudflared` | `brew install cloudflared` | [Paket von Cloudflare](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/) |
-| **Tailscale Funnel**: feste URL, kostenlos | [tailscale.com/download](https://tailscale.com/download) | `brew install tailscale` oder App Store | `curl -fsSL https://tailscale.com/install.sh \| sh` |
+| | feste URL | Windows | macOS | Linux |
+|---|---|---|---|---|
+| **Tailscale Funnel** (empfohlen, kostenlos, keine Domain nötig) | ja | `winget install Tailscale.Tailscale` | `brew install tailscale` oder App Store | `curl -fsSL https://tailscale.com/install.sh \| sh` |
+| **Cloudflare Named Tunnel** (eigene Domain bei Cloudflare nötig) | ja | `winget install Cloudflare.cloudflared` | `brew install cloudflared` | [Paket von Cloudflare](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/) |
+| **Cloudflare Quick Tunnel** (nur zum Ausprobieren) | nein, neu bei jedem Start | wie oben | wie oben | wie oben |
+
+### Tailscale Funnel einrichten
+
+1. Tailscale installieren, starten und mit einem (kostenlosen) Account anmelden.
+2. Funnel dauerhaft einschalten:
+   ```sh
+   tailscale funnel --bg 8787
+   ```
+   Beim ersten Mal gibt der Befehl einen Link aus, über den du HTTPS und Funnel für dein Tailnet
+   freischaltest. Link öffnen, bestätigen, den Befehl nochmal ausführen. `--bg` speichert die
+   Einstellung, sie bleibt auch nach Neustarts aktiv.
+3. Der Befehl zeigt deine feste Adresse an, z.B. `https://mein-pc.tail1234.ts.net`. Diese Adresse
+   (ohne Pfad) kommt in die Plugin-Config als `bridge.url`.
+4. Test von außen, z.B. am Handy ohne WLAN: `https://mein-pc.tail1234.ts.net/health` liefert
+   `{"ok": true, ...}`.
+
+`tailscale funnel status` zeigt, ob der Funnel läuft. `tailscale funnel --https=443 off` schaltet ihn ab.
+
+### Cloudflare
 
 ```sh
-cloudflared tunnel --url http://localhost:8787   # -> https://….trycloudflare.com
-tailscale funnel 8787                             # -> https://<rechner>.<tailnet>.ts.net
+cloudflared tunnel --url http://localhost:8787   # Quick Tunnel -> https://….trycloudflare.com (zufällig)
 ```
+Für eine feste Adresse unter deiner Domain: `cloudflared tunnel login`, `cloudflared tunnel create claude-bridge`,
+`cloudflared tunnel route dns claude-bridge bridge.deine-domain.de` und anschließend
+`cloudflared tunnel run --url http://localhost:8787 claude-bridge`.
 
-Für eine feste Adresse unter deiner eigenen Domain eignet sich ein Cloudflare Named Tunnel (`cloudflared tunnel create …`).
-Die Tunnel-Adresse (ohne Pfad) kommt in die Plugin-Config als `bridge.url`.
+## Dauerbetrieb und Ausfälle
+
+- Jede Anfrage ist eine eigene HTTP-Verbindung. Ist dein Rechner aus oder im Standby, bekommen die Plugins
+  einen Fehler (ClaudeChat zeigt „Claude ist gerade nicht erreichbar“). Sobald Bridge und Tunnel wieder
+  laufen, funktioniert die nächste Anfrage automatisch, ohne Neustart oder Reload auf dem Server.
+- Eine Nachricht, die während des Ausfalls kam, wird nicht wiederholt. Der Spieler muss sie nochmal schreiben.
+- Für ständige Erreichbarkeit: Autostart einrichten (siehe Installation) und den Standby des Rechners abschalten.
+
+## Fehlersuche
+
+| Symptom | Ursache |
+|---|---|
+| Plugin-Log: `401 unauthorized` | Schlüssel nicht mit `--add-key` eingetragen, oder die Uhr von Server und Rechner liegt mehr als 2 Minuten auseinander |
+| Plugin-Log: Verbindungsfehler oder `502` | Bridge nicht gestartet, Rechner im Standby oder Tunnel aus (`tailscale funnel status`) |
+| `/health` von außen nicht erreichbar | Funnel nicht freigeschaltet oder `tailscale funnel --bg 8787` nicht ausgeführt |
+| Bridge zeigt `0 authorized key(s)` | `--add-key` mit einer anderen `--authorized-keys`-Datei oder einer unvollständigen Zeile ausgeführt |
+| `503 busy` | mehr gleichzeitige Anfragen als `--parallel`, länger als `--queue-timeout` gewartet |
 
 ## Optionen
 
