@@ -29,7 +29,7 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from cryptography.hazmat.primitives.serialization import load_der_public_key
 
-__version__ = "1.3.0"
+__version__ = "1.3.1"
 
 MAX_BODY = 1_000_000
 MODEL = re.compile(r"^(sonnet|opus|haiku|claude-[a-z0-9-]+)$")
@@ -54,15 +54,9 @@ WEB_DOMAINS = (
     # Tools
     "chunkbase.com", "www.chunkbase.com", "misode.github.io", "mcstacker.net",
 )
-WEB_DOMAINS = (
-    "minecraft.wiki", "minecraft.net", "www.minecraft.net", "feedback.minecraft.net", "help.minecraft.net",
-    "bugs.mojang.com", "report.bugs.mojang.com", "papermc.io", "docs.papermc.io", "hangar.papermc.io",
-    "modrinth.com", "docs.modrinth.com", "curseforge.com", "www.curseforge.com", "fabricmc.net",
-    "docs.fabricmc.net", "neoforged.net", "docs.neoforged.net", "github.com", "spigotmc.org", "www.spigotmc.org",
-)
-# Inherited from a parent Claude Code session, they would change how the child CLI behaves
 # Token counts of a /v1/chat reply, as reported by the CLI
 USAGE_KEYS = ("input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens", "output_tokens")
+# Inherited from a parent Claude Code session, they would change how the child CLI behaves
 CLEARED_ENV = ("CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT")
 
 
@@ -327,7 +321,7 @@ def make_handler(bridge, authorized_keys):
 
         def do_GET(self):
             if self.path == "/health":
-                self.send_json(200, {"ok": True, "version": __version__})
+                self.send_json(200, {"ok": True, "version": __version__, "api": 2, "api_min": 1})
             else:
                 self.send_json(404, {"error": "not found"})
 
