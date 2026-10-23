@@ -48,4 +48,40 @@ if [[ -n "${domains}" ]]; then
     args+=(--web-domains "${domains}")
 fi
 
+# Tailscale runs as a device of its own, in userspace mode so the add-on needs no extra privileges.
+# The login and the funnel setting persist in /data/tailscale.
+start_tailscale() {
+    local socket=/var/run/tailscale/tailscaled.sock
+    mkdir -p /data/tailscale "$(dirname "${socket}")"
+    tailscaled --tun=userspace-networking --statedir=/data/tailscale --socket="${socket}" > /dev/null 2>&1 &
+    for _ in $(seq 30); do
+        [[ -S "${socket}" ]] && break
+        sleep 1
+    done
+
+    local up=(tailscale up --reset --hostname "$(option tailscale_hostname)")
+    local authkey="$(option tailscale_authkey)"
+    if [[ -n "${authkey}" ]]; then
+        up+=(--auth-key "${authkey}")
+    fi
+    # Without an auth key this prints a login link and waits until it has been opened.
+    if ! "${up[@]}"; then
+        bashio::log.error "Tailscale login failed"
+        return
+    fi
+    local url="https://$(tailscale status --json | jq -r '.Self.DNSName | rtrimstr(".")')"
+    if [[ "$(option tailscale_funnel)" == "true" ]]; then
+        # The first time this prints a link to enable Funnel for the tailnet and waits for it.
+        tailscale funnel --bg 8787
+        bashio::log.info "Tailscale Funnel: ${url} (bridge.url for the plugins)"
+    else
+        tailscale serve reset
+        bashio::log.info "Tailscale: ${url}:8787 (only inside the tailnet)"
+    fi
+}
+
+if [[ "$(option tailscale)" == "true" ]]; then
+    start_tailscale &
+fi
+
 exec claude-bridge serve "${args[@]}"

@@ -23,5 +23,17 @@ configuration:
   timeout:
     name: Timeout (seconds)
     description: How long a single CLI call may take.
+  tailscale:
+    name: Tailscale
+    description: Run Tailscale inside the add-on as a device of its own in your tailnet.
+  tailscale_hostname:
+    name: Tailscale hostname
+    description: Name in the tailnet, gives the address https://<name>.<tailnet>.ts.net.
+  tailscale_authkey:
+    name: Tailscale auth key
+    description: Optional. Without one, the first start prints a login link to the log.
+  tailscale_funnel:
+    name: Tailscale Funnel
+    description: Make the bridge reachable from the internet with Tailscale Funnel. Off = tailnet only.
 network:
   8787/tcp: Bridge API (signed requests only)

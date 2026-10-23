@@ -56,12 +56,12 @@ Raspberry Pi 4/5). Dann läuft sie rund um die Uhr, ohne dass ein PC an sein mus
 3. Auf einem Rechner mit Claude CLI `claude setup-token` ausführen und das Token in der Konfiguration unter
    **OAuth-Token** eintragen. Die Schlüssel der Plugins kommen unter **Zugelassene Schlüssel** in die Liste
    (statt `add-key`).
-4. Starten. Die Bridge lauscht auf Port 8787 des Home-Assistant-Rechners. Für Server im Internet braucht es
-   wie oben eine feste Adresse, z.B. über das Cloudflared-Add-on.
+4. Starten. Die Bridge lauscht auf Port 8787 des Home-Assistant-Rechners. Für Server im Internet die Option
+   **Tailscale** einschalten: Das Add-on bringt Tailscale Funnel mit, Login-Link und feste Adresse stehen im Log.
 
-Alles Weitere steht in der [Add-on-Doku](claude_bridge/DOCS.md). Die Add-on-Version ist die Bridge-Version
-(`version` in [`claude_bridge/config.yaml`](claude_bridge/config.yaml)), das Add-on lädt beim Bauen das passende
-Release.
+Alles Weitere steht in der [Add-on-Doku](claude_bridge/DOCS.md). Das Add-on hat eine eigene Version
+(`version` in [`claude_bridge/config.yaml`](claude_bridge/config.yaml)). Welches Bridge-Release es lädt, steht als
+`BRIDGE_VERSION` im [`Dockerfile`](claude_bridge/Dockerfile). Nach einem Bridge-Release beides erhöhen.
 
 ## Befehle
 
